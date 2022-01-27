@@ -25,7 +25,7 @@ function getNLUInstance() {
     const NaturalLanguageUnderstandingV1 = require('ibm-watson/natural-language-understanding/v1');
     const { IamAuthenticator } = require('ibm-watson/auth');
     const naturalLanguageUnderstanding = new NaturalLanguageUnderstandingV1({
-        version: '2021-08-01',
+        version: '2021-03-25',
         authenticator: new IamAuthenticator({
           apikey: api_key,
         }),
@@ -35,14 +35,34 @@ function getNLUInstance() {
       return naturalLanguageUnderstanding;      
 }
 
-
 //The default endpoint for the webserver
 app.get("/",(req,res)=>{
     res.render('index.html');
   });
 
+app.get("/url/emotion", (req, res) => {
+    const urlToAnalyze = req.query.url;
+    const nlu = getNLUInstance();
+    const analyzeParams = {
+        'url': urlToAnalyze,
+        'features': {
+          'keywords': {
+            'emotion': true,
+            'limit': 1,
+          },
+        },
+    };
+    nlu.analyze(analyzeParams)
+    .then(analysisResults => {
+        console.log(JSON.stringify(analysisResults.result.keywords[0].emotion, 2));
+        return res.send(analysisResults.result.keywords[0].emotion, null, 2);
+    })
+    .catch(err => {
+        return res.send("Could not do desired operation "+err);
+    });
+})
 //The endpoint for the webserver ending with /url/emotion
-app.get("/url/emotion", (req,res) => {
+app.get("/url/emotion2", (req,res) => {
     // //Extract the url passed from the client through the request object
     // let urlToAnalyze = req.query.url
     // const analyzeParams = 
@@ -70,16 +90,73 @@ app.get("/url/emotion", (req,res) => {
 
 //The endpoint for the webserver ending with /url/sentiment
 app.get("/url/sentiment", (req,res) => {
-    return res.send("url sentiment for "+req.query.url);
+    console.log(req.query.url);
+    const urlToAnalyze = req.query.url;
+    const analyzeParams = {
+        'url': urlToAnalyze,
+        'features': {
+          'keywords': {
+            'sentiment': true,
+            'limit': 1,
+          }
+        }
+    };
+    const nlu = getNLUInstance();
+    nlu.analyze(analyzeParams)
+    .then(analysisResults => {
+        console.log(JSON.stringify(analysisResults, 2));
+        return res.send(analysisResults.result.keywords[0].sentiment, null, 2);
+    })
+    .catch(err => {
+        return res.send("Could not do desired operation "+err);
+    });
 });
 
 //The endpoint for the webserver ending with /text/emotion
 app.get("/text/emotion", (req,res) => {
-    return res.send({"happy":"10","sad":"90"});
+    console.log(req.query.text);
+    const textToAnalyze = req.query.text;
+    const analyzeParams = {
+        'text': textToAnalyze,
+        'features': {
+          'keywords': {
+            'emotion': true,
+            'limit': 2,
+          }
+        }
+    };
+    const nlu = getNLUInstance();
+    nlu.analyze(analyzeParams)
+    .then(analysisResults => {
+        console.log(JSON.stringify(analysisResults, 2));
+        return res.send(analysisResults.result.keywords[0].emotion, null, 2);
+    })
+    .catch(err => {
+        return res.send("Could not do desired operation "+err);
+    });
 });
 
 app.get("/text/sentiment", (req,res) => {
-    return res.send("text sentiment for "+req.query.text);
+    console.log(req.query.text);
+    const textToAnalyze = req.query.text;
+    const analyzeParams = {
+        'text': textToAnalyze,
+        'features': {
+          'keywords': {
+            'sentiment': true,
+            'limit': 1,
+          }
+        }
+    };
+    const nlu = getNLUInstance();
+    nlu.analyze(analyzeParams)
+    .then(analysisResults => {
+        console.log(JSON.stringify(analysisResults, 2));
+        return res.send(analysisResults.result.keywords[0].sentiment, null, 2);
+    })
+    .catch(err => {
+        return res.send("Could not do desired operation "+err);
+    });
 });
 
 let server = app.listen(8080, () => {
